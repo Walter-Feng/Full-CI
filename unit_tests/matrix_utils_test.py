@@ -9,4 +9,4 @@ a = np.array([
     [0, 0, 0, -0.1, 10]
 ])
 
-assert(np.all(np.abs(np.linalg.eigvals(a)[:3] - matrix_utils.davidson_diagonalization(a, 3)) < 1e-6))
+assert(np.all(np.abs(np.linalg.eigvals(a)[:3] - matrix_utils.davidson_diagonalization(a, 3)) < 1e-10))

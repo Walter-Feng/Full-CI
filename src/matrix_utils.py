@@ -1,14 +1,18 @@
 import numpy as np
 
-def davidson_diagonalization(matrix, n_eigenvalues, search_dim_multiplier = 2, eigs_tol = 1e-6, eigvecs_tol = 1e-5, max_iter = 1000) :
+def davidson_diagonalization(matrix, n_eigenvalues, search_dim_multiplier = 2, eigs_tol = 1e-10, eigvecs_tol = 1e-8, max_iter = 1000) :
     n_rows, n_cols = matrix.shape
     assert(n_rows == n_cols)
 
-    iteration_vectors = np.eye(n_rows, n_eigenvalues)
+    iteration_vectors = np.eye(n_rows, n_eigenvalues) + 1
     guess_eigenvalues = np.zeros(n_eigenvalues)
 
     for iter in range(max_iter):
+
         old_eigenvalues = guess_eigenvalues[:n_eigenvalues]
+
+        # perform QR decomposition to make sure the column vectors are orthonormal
+        iteration_vectors, upper_triangular = np.linalg.qr(iteration_vectors)
 
         weight_matrix = np.dot(matrix, iteration_vectors)
         rayleigh_matrix = np.dot(iteration_vectors.T, weight_matrix)
@@ -38,11 +42,9 @@ def davidson_diagonalization(matrix, n_eigenvalues, search_dim_multiplier = 2, e
 
         if search_n_cols <= n_eigenvalues * (search_dim_multiplier - 1):
             iteration_vectors = np.concatenate((iteration_vectors, residuals), axis=1)
-        else :
+        else:
             iteration_vectors = np.concatenate((ritz_vectors, residuals), axis=1)
 
-        # perform QR decomposition to make sure the column vectors are orthonormal
-        iteration_vectors, upper_triangular = np.linalg.qr(iteration_vectors)
 
     if iter == max_iter:
         raise Exception("Davidson diagonaliztion failed")
