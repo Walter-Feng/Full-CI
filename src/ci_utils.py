@@ -4,9 +4,21 @@ import itertools
 import math
 
 def compare_excitation(left_indices, right_indices):
-    unique_from_left = left_indices - right_indices
-    unique_from_right = right_indices - left_indices
+    left_indices_set = set(left_indices)
+    right_indices_set = set(right_indices)
+
+    unique_from_left = left_indices_set - right_indices_set
+    unique_from_right = right_indices_set - left_indices_set
     return (unique_from_left, unique_from_right)
+
+def phase_factor(excitation, left_indices, right_indices):
+    indices_swap = 0
+    left_excitation, right_excitation = excitation
+
+    assert(sorted(left_indices) and sorted(right_indices))
+    assert((sorted(left_excitation) or len(left_excitation) == 0) and (sorted(right_excitation) or len(right_excitation) == 0))
+    for index, a in enumerate(left_excitation):
+        pass
 
 def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
 
@@ -22,8 +34,8 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
     n_alpha = (n_elecs + n_spin) // 2
     n_beta = (n_elecs - n_spin) // 2
 
-    alpha_combinations = [set(x) for x in itertools.combinations(range(n_orbs), n_alpha)]
-    beta_combinations = [set(x) for x in itertools.combinations(range(n_orbs), n_beta)]
+    alpha_combinations = [list(x) for x in itertools.combinations(range(n_orbs), n_alpha)]
+    beta_combinations = [list(x) for x in itertools.combinations(range(n_orbs), n_beta)]
 
     n_dim = len(alpha_combinations) * len(beta_combinations)
 
@@ -39,6 +51,7 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
 
             alpha_excitation = compare_excitation(i_alpha_combination, j_alpha_combination)
             beta_excitation = compare_excitation(i_beta_combination, j_beta_combination)
+            phase_factor(alpha_excitation, i_alpha_combination, j_alpha_combination)
 
             n_alpha_excitation = len(alpha_excitation[0])
             n_beta_excitation = len(beta_excitation[0])
@@ -78,9 +91,9 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 hamiltonian[i, j] = element
                 hamiltonian[j, i] = element
 
-    print(np.sort(np.linalg.eigvals(hamiltonian)))
-
-    return src.matrix_utils.davidson_diagonalization(hamiltonian, 2, search_dim_multiplier = 6)
+    # print(np.sort(np.linalg.eigvals(hamiltonian)))
+    return np.sort(np.linalg.eigvals(hamiltonian))
+    # return src.matrix_utils.davidson_diagonalization(hamiltonian, 2, search_dim_multiplier = 6)
 
 def addressing_array(elec_index, orb_index, n_elec, n_orb):
     return sum([math.comb(m, n_elec - elec_index) - math.comb(m-1, n_elec - elec_index - 1)
