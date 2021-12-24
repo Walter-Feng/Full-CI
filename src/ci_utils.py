@@ -17,8 +17,11 @@ def phase_factor(excitation, left_indices, right_indices):
 
     assert(sorted(left_indices) and sorted(right_indices))
     assert((sorted(left_excitation) or len(left_excitation) == 0) and (sorted(right_excitation) or len(right_excitation) == 0))
-    for index, a in enumerate(left_excitation):
-        pass
+
+    for index, orbital_index in enumerate(left_excitation):
+        indices_swap += orbital_index + index
+
+    return math.pow(-1, indices_swap)
 
 def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
 
@@ -42,16 +45,23 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
     hamiltonian = np.zeros((n_dim, n_dim))
 
     for i in range(n_dim):
+
+        i_alpha_combination = alpha_combinations[i % len(beta_combinations)]
+        i_beta_combination = beta_combinations[i // len(beta_combinations)]
+
+        # for j in range(i, n_dim):
         for j in range(i, n_dim):
 
-            i_alpha_combination = alpha_combinations[i % len(beta_combinations)]
-            i_beta_combination = beta_combinations[i // len(beta_combinations)]
             j_alpha_combination = alpha_combinations[j % len(beta_combinations)]
             j_beta_combination = beta_combinations[j // len(beta_combinations)]
 
             alpha_excitation = compare_excitation(i_alpha_combination, j_alpha_combination)
             beta_excitation = compare_excitation(i_beta_combination, j_beta_combination)
-            phase_factor(alpha_excitation, i_alpha_combination, j_alpha_combination)
+
+            alpha_phase = phase_factor(alpha_excitation, i_alpha_combination, j_alpha_combination)
+            beta_phase = phase_factor(beta_excitation, i_beta_combination, j_beta_combination)
+
+            total_phase_factor = alpha_phase * beta_phase
 
             n_alpha_excitation = len(alpha_excitation[0])
             n_beta_excitation = len(beta_excitation[0])
@@ -63,7 +73,7 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 hamiltonian[i, j] += sum([one_electron_integrals[p, p] for p in (list(i_alpha_combination) + list(i_beta_combination))])
                 for k in range(n_orbs):
                     for t in range(k, n_orbs):
-                        hamiltonian[i, j] += (two_electron_integrals[k, k, t, t] - two_electron_integrals[k, t, k, t])
+                        hamiltonian[i, j] += two_electron_integrals[k, k, t, t] - two_electron_integrals[k, t, k, t]
 
             if n_alpha_excitation + n_beta_excitation == 1:
                 if n_alpha_excitation == 1:
@@ -77,8 +87,8 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 element = one_electron_integrals[index_a, index_b] + sum(
                     [two_electron_integrals[index_a, index_b, p, p] - two_electron_integrals[index_a, p, index_b, p] for
                      p in range(n_orbs)])
-                hamiltonian[i, j] = element
-                hamiltonian[j, i] = element
+                hamiltonian[i, j] = total_phase_factor * element
+                hamiltonian[j, i] = total_phase_factor * element
 
             if n_alpha_excitation + n_beta_excitation == 2:
 
@@ -88,8 +98,8 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 element = two_electron_integrals[indices_a[0], indices_b[0], indices_a[1], indices_b[1]] - \
                           two_electron_integrals[indices_a[0], indices_b[1], indices_a[1], indices_b[0]]
 
-                hamiltonian[i, j] = element
-                hamiltonian[j, i] = element
+                hamiltonian[i, j] = total_phase_factor * element
+                hamiltonian[j, i] = total_phase_factor * element
 
     # print(np.sort(np.linalg.eigvals(hamiltonian)))
     return np.sort(np.linalg.eigvals(hamiltonian))
