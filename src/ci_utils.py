@@ -110,9 +110,7 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
             # I think of the alignment of the creation operators as something like
             #  | beta |  | alpha |
             #   1  3  5   2  5  6  |0>
-            # and to move the operators from alpha electrons to the head of the list, another factor is multiplied
-            # n_beta_excitation is subtracted to ensure the list of excitation keeps the beta, alpha order
-            total_phase_factor = alpha_phase * beta_phase * math.pow(-1, (n_beta - n_beta_excitation) * n_alpha_excitation)
+            total_phase_factor = alpha_phase * beta_phase
 
             # No excitation, i.e. the Slater determinant is the same on the two sides
             if n_alpha_excitation + n_beta_excitation == 0:
@@ -198,10 +196,20 @@ def diagonalize_ci(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 hamiltonian[i, j] = total_phase_factor * element
                 hamiltonian[j, i] = total_phase_factor * element
 
+            if n_alpha_excitation == 1 and n_beta_excitation == 1:
+                a = list(alpha_excitation[0])[0]
+                b = list(beta_excitation[0])[0]
+                x = list(alpha_excitation[1])[0]
+                y = list(beta_excitation[1])[0]
+
+                element = two_electron_integrals[a, x, b, y]
+
+                hamiltonian[i, j] = total_phase_factor * element
+                hamiltonian[j, i] = total_phase_factor * element
     # print(np.sort(np.linalg.eigvals(hamiltonian)))\
     # print(hamiltonian[:5, :5])
-    return np.sort(np.linalg.eigvals(hamiltonian)[:5])
-    # return src.matrix_utils.davidson_diagonalization(hamiltonian, 1, search_dim_multiplier = 6)
+    # return np.sort(np.linalg.eigvals(hamiltonian)[:5])
+    return src.matrix_utils.davidson_diagonalization(hamiltonian, 1, search_dim_multiplier = 6)
 
 def addressing_array(elec_index, orb_index, n_elec, n_orb):
     return sum([math.comb(m, n_elec - elec_index) - math.comb(m-1, n_elec - elec_index - 1)
