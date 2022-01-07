@@ -1,5 +1,7 @@
 from src import matrix_utils
 import numpy as np
+import math
+from src import ci_utils
 
 a = np.array([
     [1, 0.1, 0, 0, 0],
@@ -9,4 +11,26 @@ a = np.array([
     [0, 0, 0, -0.1, 10]
 ])
 
-assert(np.all(np.abs(np.linalg.eigvals(a)[:3] - matrix_utils.davidson_diagonalization(a, 3)) < 1e-10))
+assert(np.all(np.abs(np.linalg.eigvals(a)[:3] -
+                     matrix_utils.generalized_davidson_diagonalization(a, 3)) < 1e-10))
+
+h1e = np.load("doc/h1e.npy")
+h2e = np.load("doc/h2e.npy")
+
+# print(
+#     src.ci_utils.ci_direct_diagonalize(h1e, h2e, 6)
+# )
+
+
+assert(
+    np.abs(matrix_utils.jacobi_davidson_diagonalization(
+        lambda vec: ci_utils.ci_transform(vec, h1e, h2e, 6),
+        ci_utils.ci_hamiltonian_diagonal(h1e, h2e, 6),
+        0,
+        2,
+        400,
+        residue_tol=1e-5
+)[0] + 7.8399080148963369) < 1e-10
+
+)
+

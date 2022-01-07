@@ -9,8 +9,13 @@ assert(src.ci_utils.compare_excitation({0, 2, 3, 4}, {0, 1, 5, 6}) == ({2,3,4}, 
 
 h1e = np.load("doc/h1e.npy")
 h2e = np.load("doc/h2e.npy")
-# print("Fock:", h1e + 2 * np.einsum("aijj->ai", h2e[:, :, :3, :3]) - np.einsum("ajij->ai", h2e[:, :3, :, :3]))
 
-fock = h1e + 2 * np.einsum("aijj->ai", h2e[:, :, :3, :3]) - np.einsum("ajij->ai", h2e[:, :3, :, :3])
+hamiltonian = src.ci_utils.ci_hamiltonian(h1e, h2e, 6)
+eigvals = src.ci_utils.ci_direct_diagonalize(h1e, h2e, 6)
+assert(np.abs(np.sort(eigvals)[0] + 7.8399080148963369) < 1e-13)
 
-print(src.ci_utils.diagonalize_ci(h1e, h2e, 6))
+rand_vector = np.random.rand(eigvals.shape[0])
+
+assert(np.all(np.abs(np.dot(hamiltonian, rand_vector) - src.ci_utils.ci_transform(rand_vector, h1e, h2e, 6))) < 1e-16)
+
+
