@@ -1,7 +1,6 @@
 from src import matrix_utils
 import numpy as np
 import math
-from src import ci_utils
 
 a = np.array([
     [1, 0.1, 0, 0, 0],
