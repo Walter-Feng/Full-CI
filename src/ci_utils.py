@@ -31,7 +31,7 @@ def phase_factor(excitation, left_indices, right_indices):
     # 1 4 5 6 8
     #       ^
     # 0 1 2 3 4  <---- index of the list in python
-    # you need three 2-cycles to move 4 to the head of the list.
+    # you need three 2-cycles to move 6 to the head of the list.
     # If you have two or more numbers, you need to remove the redundant swapping to keep the operators
     # corresponding to excited orbitals in ascending order. e.g.
     # 1 4 5 6 8
@@ -43,7 +43,7 @@ def phase_factor(excitation, left_indices, right_indices):
     # and one step is redundant because we had 8 before 6, to correct this we subtract 1 from the number of swaps to
     # represent
     # 6 8 1 4 5
-    # and this subtraction corresponds to the index of the excited number in excitation list.
+    # and this subtraction corresponds to the index of the excitation orbital in excitation list.
     for index, orbital_index in enumerate(left_excitation):
         indices_swap += left_indices.index(orbital_index) - index
 
@@ -120,7 +120,7 @@ def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integra
                     np.einsum("ii->", one_electron_integrals[np.ix_(i_alpha_combination, i_alpha_combination)]) \
                     + np.einsum("ii->", one_electron_integrals[np.ix_(i_beta_combination, i_beta_combination)])
 
-                # <ij | v | ij>, or (ii | jj). Non trivial contribution from  configurations having
+                # <ij | v | ij>, or (ii | jj). Non trivial contribution from configurations having
                 # the same spin for i and the same spin for j
                 coulomb_part = \
                     np.einsum("iijj->", two_electron_integrals[np.ix_(i_alpha_combination, i_alpha_combination,
@@ -184,7 +184,6 @@ def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integra
                     "phase_factor": total_phase_factor
                 })
 
-
             if n_alpha_excitation == 2:
                 left_excitation, right_excitation = map(list, alpha_excitation)
 
@@ -199,7 +198,6 @@ def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integra
                     "element": total_phase_factor * element,
                     "phase_factor": total_phase_factor
                 })
-
 
             if n_beta_excitation == 2:
                 left_excitation, right_excitation = map(list, beta_excitation)
@@ -232,6 +230,13 @@ def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integra
 
     return np.array(diagonal), non_trivial
 
+###########################################################################################
+#
+#
+#         All the functions below were for debugging purposes
+#
+#
+###########################################################################################
 def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0):
 
     n_rows, n_cols = one_electron_integrals.shape

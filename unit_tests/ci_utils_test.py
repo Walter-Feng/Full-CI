@@ -18,4 +18,15 @@ rand_vector = np.random.rand(eigvals.shape[0])
 
 assert(np.all(np.abs(np.dot(hamiltonian, rand_vector) - src.ci_utils.ci_transform(rand_vector, h1e, h2e, 6))) < 1e-16)
 
+ci_diagonal, ci_sparse_matrix = ci_utils.ci_hamiltonian_in_sparse_matrix(h1e, h2e, 6)
+
+assert(
+    np.abs(matrix_utils.jacobi_davidson_diagonalization(
+        lambda vec: matrix_utils.sparse_matrix_transform(ci_sparse_matrix, vec),
+        ci_diagonal,
+        0,
+        2,
+        400,
+        residue_tol=1e-5
+)[0] + 7.8399080148963369) < 1e-10)
 
