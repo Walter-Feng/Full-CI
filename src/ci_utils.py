@@ -52,7 +52,7 @@ def phase_factor(excitation, left_indices, right_indices):
 
     return math.pow(-1, indices_swap)
 
-def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
+def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
 
     n_rows, n_cols = one_electron_integrals.shape
 
@@ -71,7 +71,8 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
     # the dimension of the hamiltonian matrix (dimension of the determinant basis)
     n_dim = len(alpha_combinations) * len(beta_combinations)
 
-    hamiltonian = np.zeros((n_dim, n_dim))
+    non_trivial = []
+    diagonal = []
 
     for i in range(n_dim):
 
@@ -137,7 +138,14 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                     0.5 * np.einsum("ijji->", two_electron_integrals[np.ix_(i_beta_combination, i_beta_combination,
                                                                             i_beta_combination, i_beta_combination)])
 
-                hamiltonian[i, j] = one_electron_part + coulomb_part - exchange_part
+                element = one_electron_part + coulomb_part - exchange_part
+                non_trivial.append({
+                    "index": (i, j),
+                    "element": element,
+                    "phase_factor": 1
+                })
+
+                diagonal.append(element)
 
             if n_alpha_excitation + n_beta_excitation == 1:
                 alpha_shared_orbitals = list(set(i_alpha_combination).intersection(set(j_alpha_combination)))
@@ -169,8 +177,13 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                 element = \
                     one_electron_integrals[index_a, index_b] + \
                           np.einsum("ijkk->", coulomb_submatrix) - np.einsum("ikkj->", exchange_submatrix)
-                hamiltonian[i, j] = total_phase_factor * element
-                hamiltonian[j, i] = total_phase_factor * element
+
+                non_trivial.append({
+                    "index": (i, j),
+                    "element": total_phase_factor * element,
+                    "phase_factor": total_phase_factor
+                })
+
 
             if n_alpha_excitation == 2:
                 left_excitation, right_excitation = map(list, alpha_excitation)
@@ -181,8 +194,12 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                           - two_electron_integrals[left_excitation[0], right_excitation[1],
                                                    left_excitation[1], right_excitation[0]]
 
-                hamiltonian[i, j] = total_phase_factor * element
-                hamiltonian[j, i] = total_phase_factor * element
+                non_trivial.append({
+                    "index": (i, j),
+                    "element": total_phase_factor * element,
+                    "phase_factor": total_phase_factor
+                })
+
 
             if n_beta_excitation == 2:
                 left_excitation, right_excitation = map(list, beta_excitation)
@@ -193,8 +210,11 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
                           - two_electron_integrals[left_excitation[0], right_excitation[1],
                                                    left_excitation[1], right_excitation[0]]
 
-                hamiltonian[i, j] = total_phase_factor * element
-                hamiltonian[j, i] = total_phase_factor * element
+                non_trivial.append({
+                    "index": (i, j),
+                    "element": total_phase_factor * element,
+                    "phase_factor": total_phase_factor
+                })
 
             if n_alpha_excitation == 1 and n_beta_excitation == 1:
                 a = list(alpha_excitation[0])[0]
@@ -204,8 +224,38 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
 
                 element = two_electron_integrals[a, x, b, y]
 
-                hamiltonian[i, j] = total_phase_factor * element
-                hamiltonian[j, i] = total_phase_factor * element
+                non_trivial.append({
+                    "index": (i, j),
+                    "element": total_phase_factor * element,
+                    "phase_factor": total_phase_factor
+                })
+
+    return np.array(diagonal), non_trivial
+
+def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0):
+
+    n_rows, n_cols = one_electron_integrals.shape
+
+    n_orbs = n_rows
+
+    assert(n_rows == n_cols)
+    assert(np.all(np.array(two_electron_integrals.shape) == n_orbs))
+
+    n_alpha = (n_elecs + n_spin) // 2
+    n_beta = (n_elecs - n_spin) // 2
+
+    diagonal, non_trivial = \
+        ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integrals, n_elecs, n_spin)
+
+    n_dim = diagonal.shape[0]
+
+    hamiltonian = np.zeros((n_dim, n_dim))
+
+    for i in non_trivial:
+        row, col = i["index"]
+        hamiltonian[row, col] = i["element"]
+        if row != col:
+            hamiltonian[col, row] = i["element"]
 
     return hamiltonian
 
@@ -435,3 +485,4 @@ def ci_transform(config_vector, one_electron_integrals, two_electron_integrals, 
                 transformed_vector[j] += total_phase_factor * element * config_vector[i]
 
     return transformed_vector
+

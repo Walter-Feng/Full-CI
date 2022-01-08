@@ -17,20 +17,16 @@ assert(np.all(np.abs(np.linalg.eigvals(a)[:3] -
 h1e = np.load("doc/h1e.npy")
 h2e = np.load("doc/h2e.npy")
 
-# print(
-#     src.ci_utils.ci_direct_diagonalize(h1e, h2e, 6)
-# )
-
+ci_diagonal, ci_sparse_matrix = ci_utils.ci_hamiltonian_in_sparse_matrix(h1e, h2e, 6)
 
 assert(
     np.abs(matrix_utils.jacobi_davidson_diagonalization(
-        lambda vec: ci_utils.ci_transform(vec, h1e, h2e, 6),
-        ci_utils.ci_hamiltonian_diagonal(h1e, h2e, 6),
+        lambda vec: matrix_utils.sparse_matrix_transform(ci_sparse_matrix, vec),
+        ci_diagonal,
         0,
         2,
         400,
         residue_tol=1e-5
-)[0] + 7.8399080148963369) < 1e-10
+)[0] + 7.8399080148963369) < 1e-10)
 
-)
 

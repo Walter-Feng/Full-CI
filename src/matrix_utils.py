@@ -1,5 +1,16 @@
 import numpy as np
 
+def sparse_matrix_transform(sparse_matrix, vector):
+    n_dim = vector.shape[0]
+    transformed_vec = np.zeros(n_dim)
+    for i in sparse_matrix:
+        row, col = i["index"]
+        transformed_vec[row] += i["element"] * vector[col]
+        if row != col:
+            transformed_vec[col] += i["element"] * vector[row]
+
+    return transformed_vec
+
 def generalized_davidson_diagonalization(matrix, n_eigenvalues, search_dim_multiplier = 2,
                                          eigs_tol = 1e-10, eigvecs_tol = 1e-8, max_iter = 1000) :
     n_rows, n_cols = matrix.shape
@@ -54,6 +65,7 @@ def generalized_davidson_diagonalization(matrix, n_eigenvalues, search_dim_multi
 
     return guess_eigenvalues[:n_eigenvalues]
 
+
 def jacobi_davidson_diagonalization(transformer,
                                     diagonal,
                                     eigenvalue_index,
@@ -87,7 +99,6 @@ def jacobi_davidson_diagonalization(transformer,
         residue = np.dot(Ab_i, eigvec) - eig * np.dot(orthonormal_subspace, eigvec)
 
         if np.linalg.norm(residue) < residue_tol:
-            print(iter)
             return eig, eigvec
 
         xi = np.dot(np.diagflat(1.0 / (eig - diagonal)), residue)
