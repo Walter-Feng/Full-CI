@@ -1,7 +1,10 @@
 import src.ci_utils
 import numpy as np
+import itertools
 
-
+orbital_combinations = [list(x) for x in itertools.combinations(range(8), 5)]
+assert([orbital_combinations[i] for i in [src.ci_utils.address_array(j, 5, 8) for j in orbital_combinations]]
+                == orbital_combinations)
 assert(src.ci_utils.compare_excitation({0, 1, 2}, {0, 1, 2}) == (set(), set()))
 assert(src.ci_utils.compare_excitation({0, 1, 2}, {0, 1, 3}) == ({2}, {3}))
 assert(src.ci_utils.compare_excitation({0, 2, 3}, {0, 1, 3}) == ({2}, {1}))

@@ -2,7 +2,7 @@ import src.ci_utils
 import src.matrix_utils
 
 def full_ci(one_electron_integrals, two_electron_integrals, n_elecs, start_search_dim, n_spin = 0, residue_tol=1e-5) :
-    ci_diagonal, ci_sparse_matrix = ci_utils.ci_hamiltonian_in_sparse_matrix(one_electron_integrals,
+    ci_diagonal, ci_sparse_matrix = src.ci_utils.ci_hamiltonian_in_sparse_matrix(one_electron_integrals,
                                                                              two_electron_integrals,
                                                                              n_elecs, n_spin)
 

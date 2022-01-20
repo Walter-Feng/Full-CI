@@ -3,6 +3,19 @@ import src.matrix_utils
 import itertools
 import math
 
+
+def Z(k, l, n_elec, n_orbs):
+    if k == n_elec:
+        return l - n_elec
+    else:
+        return sum([math.comb(m, n_elec - k) - math.comb(m - 1, n_elec - k - 1)
+                    for m in range(n_orbs - l + 1, n_orbs - k + 1)])
+
+
+def address_array(orbital_list, n_elec, n_orbs):
+    return sum([Z(elec_index + 1, orbital + 1, n_elec, n_orbs) for elec_index, orbital in enumerate(list(orbital_list))])
+
+
 # Compare the excitation, i.e. the mismatching orbital indices
 def compare_excitation(left_indices, right_indices):
     left_indices_set = set(left_indices)
@@ -12,6 +25,7 @@ def compare_excitation(left_indices, right_indices):
     unique_from_left = left_indices_set - right_indices_set
     unique_from_right = right_indices_set - left_indices_set
     return (unique_from_left, unique_from_right)
+
 
 # Calculate the phase factor, i.e. the sign of the determinant when the creation/annihilation operators are swapped to
 # the tail of the list of operators
@@ -51,6 +65,7 @@ def phase_factor(excitation, left_indices, right_indices):
         indices_swap += right_indices.index(orbital_index) - index
 
     return math.pow(-1, indices_swap)
+
 
 def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
 
@@ -230,6 +245,7 @@ def ci_hamiltonian_in_sparse_matrix(one_electron_integrals, two_electron_integra
 
     return np.array(diagonal), non_trivial
 
+
 ###########################################################################################
 #
 #
@@ -263,6 +279,7 @@ def ci_hamiltonian(one_electron_integrals, two_electron_integrals, n_elecs, n_sp
             hamiltonian[col, row] = i["element"]
 
     return hamiltonian
+
 
 def ci_hamiltonian_diagonal(one_electron_integrals, two_electron_integrals, n_elecs, n_spin = 0) :
 
@@ -339,7 +356,6 @@ def ci_transform(config_vector, one_electron_integrals, two_electron_integrals, 
 
     assert(n_rows == n_cols)
     assert(np.all(np.array(two_electron_integrals.shape) == n_orbs))
-
 
     n_alpha = (n_elecs + n_spin) // 2
     n_beta = (n_elecs - n_spin) // 2
