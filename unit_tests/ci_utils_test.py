@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 
 orbital_combinations = [list(x) for x in itertools.combinations(range(8), 5)]
+
 assert([orbital_combinations[i] for i in [src.ci_utils.address_array(j, 5, 8) for j in orbital_combinations]]
                 == orbital_combinations)
 assert(src.ci_utils.compare_excitation({0, 1, 2}, {0, 1, 2}) == (set(), set()))
@@ -19,9 +20,15 @@ assert(np.abs(np.sort(eigvals)[0] + 7.8399080148963369) < 1e-13)
 
 rand_vector = np.random.rand(eigvals.shape[0])
 
-assert(np.all(np.abs(np.dot(hamiltonian, rand_vector) - src.ci_utils.ci_transform(rand_vector, h1e, h2e, 6))) < 1e-16)
+# assert(np.all(np.abs(np.dot(hamiltonian, rand_vector) - src.ci_utils.ci_transform(rand_vector, h1e, h2e, 6))) < 1e-16)
 
 ci_diagonal, ci_sparse_matrix = src.ci_utils.ci_hamiltonian_in_sparse_matrix(h1e, h2e, 6)
+
+transformer1 = src.ci_utils.knowles_handy_full_ci_transformer(h1e, h2e, 6)
+transformer2 = lambda vec: src.matrix_utils.sparse_matrix_transform(ci_sparse_matrix, vec)
+
+transformer1(rand_vector)
+# print(transformer1(rand_vector), transformer2(rand_vector))
 
 assert(
     np.abs(src.matrix_utils.davidson_diagonalization(

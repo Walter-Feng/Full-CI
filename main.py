@@ -16,3 +16,6 @@ def full_ci(one_electron_integrals, two_electron_integrals, n_elecs, start_searc
         n_dim,
         residue_tol
     )
+
+def knowles_handy_full_ci(one_electron_integrals, two_electron_integrals,
+                          n_elecs, start_search_dim, n_spin = 0, residue_tol=1e-5) :
