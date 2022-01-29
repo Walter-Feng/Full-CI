@@ -1,7 +1,8 @@
 import src.ci_utils
 import src.matrix_utils
 
-def full_ci(one_electron_integrals, two_electron_integrals, n_elecs, start_search_dim, n_spin = 0, residue_tol=1e-5) :
+
+def full_ci(one_electron_integrals, two_electron_integrals, n_elecs, start_search_dim, n_spin=0, residue_tol=1e-5):
     ci_diagonal, ci_sparse_matrix = src.ci_utils.ci_hamiltonian_in_sparse_matrix(one_electron_integrals,
                                                                              two_electron_integrals,
                                                                              n_elecs, n_spin)
@@ -17,5 +18,17 @@ def full_ci(one_electron_integrals, two_electron_integrals, n_elecs, start_searc
         residue_tol
     )
 
+
 def knowles_handy_full_ci(one_electron_integrals, two_electron_integrals,
-                          n_elecs, start_search_dim, n_spin = 0, residue_tol=1e-5) :
+                          n_elecs, start_search_dim, n_spin=0, residue_tol=1e-5):
+
+    ci_diagonal = src.ci_utils.ci_hamiltonian_diagonal(one_electron_integrals, two_electron_integrals, n_elecs)
+
+    return src.matrix_utils.davidson_diagonalization(
+        src.ci_utils.knowles_handy_full_ci_transformer(one_electron_integrals, two_electron_integrals, n_elecs, n_spin=n_spin),
+        ci_diagonal,
+        0,
+        start_search_dim,
+        len(ci_diagonal),
+        residue_tol
+    )
