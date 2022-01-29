@@ -1,6 +1,7 @@
 import src.ci_utils
 import numpy as np
 import itertools
+import time
 
 orbital_combinations = [list(x) for x in itertools.combinations(range(8), 5)]
 
@@ -22,6 +23,9 @@ rand_vector = np.random.rand(eigvals.shape[0])
 
 assert(np.all(np.abs(np.dot(hamiltonian, rand_vector) - src.ci_utils.ci_transform(rand_vector, h1e, h2e, 6))) < 1e-16)
 
+
+start = time.time()
+
 ci_diagonal, ci_sparse_matrix = src.ci_utils.ci_hamiltonian_in_sparse_matrix(h1e, h2e, 6)
 
 assert(
@@ -34,6 +38,11 @@ assert(
         residue_tol=1e-5
 )[0] + 7.8399080148963369) < 1e-10)
 
+end = time.time()
+
+print("Direct hamltonian matrix element access algorithm: ", end - start)  # 1.36 s
+
+start = time.time()
 
 assert(
     np.abs(src.matrix_utils.davidson_diagonalization(
@@ -44,3 +53,7 @@ assert(
         400,
         residue_tol=1e-5
 )[0] + 7.8399080148963369) < 1e-10)
+
+end = time.time()
+
+print("KH algorithm: ", end - start)  # 0.93 s
